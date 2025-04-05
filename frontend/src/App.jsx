@@ -1,3 +1,4 @@
+
 import { Box, useColorModeValue } from "@chakra-ui/react"
 import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
@@ -15,6 +16,9 @@ import NavigationPage from "./pages/NavigationPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import MyCart from "./components/MyCart"
 import BillingAddress from "./components/BillingAddress";
+import PaymentPage from "./pages/Payement";
+
+
 //protected routes
 const ProtectedRoutes = ({ children }) => {
   const { isAuthenticated, user } = useAuthStore();
@@ -76,6 +80,7 @@ function App() {
 				/>
         <Route path="/cart" element={<MyCart/>}></Route>
         <Route path="/billing" element={<BillingAddress/>}/>
+        <Route path="/payment" element={<PaymentPage />} />
       </Routes>
       <Toaster />
     </Box>

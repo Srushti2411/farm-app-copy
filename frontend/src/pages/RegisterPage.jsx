@@ -63,7 +63,7 @@ const RegisterPage = () => {
                             style={{ marginBottom: '15px', padding: '8px', borderRadius: '4px' }}
                         >
                             <option value="user">User</option>
-                            <option value="seller">Seller</option>
+                            <option value="seller">Farmer</option>
                         </select>
 
                         {error && <p style={{ color: "red" }}> {error} </p>}

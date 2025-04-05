@@ -24,7 +24,8 @@
     "mailtrap": "^3.4.0",
     "mongoose": "^8.6.2",
     "nodemailer": "^6.9.16",
-    "react-router-dom": "^6.26.2"
+    "react-router-dom": "^6.26.2",
+    "stripe": "^18.0.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
