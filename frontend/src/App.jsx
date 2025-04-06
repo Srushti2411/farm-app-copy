@@ -1,4 +1,3 @@
-
 import { Box, useColorModeValue } from "@chakra-ui/react"
 import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
@@ -14,15 +13,14 @@ import { useEffect } from "react";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NavigationPage from "./pages/NavigationPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import MyCart from "./components/MyCart"
-import BillingAddress from "./components/BillingAddress";
+import MyCart from "./components/MyCart";
+
+import BillingAddress from "./components/BillingAddress"; // ✅ make sure this file is named `BillingAddress.jsx`
 import PaymentPage from "./pages/Payement";
 
-
-//protected routes
+// ✅ Protected Routes
 const ProtectedRoutes = ({ children }) => {
   const { isAuthenticated, user } = useAuthStore();
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
@@ -32,10 +30,9 @@ const ProtectedRoutes = ({ children }) => {
   return children;
 }
 
-//Redirect authenticated user to  home page
+// ✅ Redirect if already logged in
 const RedirectAuthenticatedUser = ({ children }) => {
   const { isAuthenticated, user } = useAuthStore();
-
   if (isAuthenticated && user.isVerified) {
     return <Navigate to='/' replace />
   }
@@ -48,38 +45,34 @@ function App() {
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth])
-
+  }, [checkAuth]);
 
   return (
     <Box minH={"100vh"} bg={useColorModeValue("red.100", "gray.900")} >
       <NavBar />
       <Routes>
-        <Route path="/" element={<ProtectedRoutes>
-          <HomePage />
-        </ProtectedRoutes>} />
-        <Route path="/create" element={<ProtectedRoutes>
-          <CreatePage />
-          </ProtectedRoutes>} />
-        <Route path="/login" element={<RedirectAuthenticatedUser>
-          <LoginPage />
-        </RedirectAuthenticatedUser>} />
-        <Route path="/register" element={<RedirectAuthenticatedUser>
-          <RegisterPage />
-        </RedirectAuthenticatedUser>} />
+        <Route path="/" element={
+          <ProtectedRoutes><HomePage /></ProtectedRoutes>
+        } />
+        <Route path="/create" element={
+          <ProtectedRoutes><CreatePage /></ProtectedRoutes>
+        } />
+        <Route path="/login" element={
+          <RedirectAuthenticatedUser><LoginPage /></RedirectAuthenticatedUser>
+        } />
+        <Route path="/register" element={
+          <RedirectAuthenticatedUser><RegisterPage /></RedirectAuthenticatedUser>
+        } />
         <Route path="/verify-email" element={<EmailVerification />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/nav" element={<NavigationPage/>}/> 
-        <Route
-					path='/reset-password/:token'
-					element={
-						<RedirectAuthenticatedUser>
-							<ResetPasswordPage />
-						 </RedirectAuthenticatedUser>
-					}
-				/>
-        <Route path="/cart" element={<MyCart/>}></Route>
-        <Route path="/billing" element={<BillingAddress/>}/>
+        <Route path="/nav" element={<NavigationPage />} />
+        <Route path='/reset-password/:token' element={
+          <RedirectAuthenticatedUser><ResetPasswordPage /></RedirectAuthenticatedUser>
+        } />
+        <Route path="/cart" element={<MyCart />} />
+
+        {/* ✅ Stripe Billing and Payment Routes */}
+        <Route path="/billing" element={<BillingAddress />} />
         <Route path="/payment" element={<PaymentPage />} />
       </Routes>
       <Toaster />

@@ -1,31 +1,36 @@
-// controllers/billing.controllers.js
 import Stripe from 'stripe';
-const stripe = new Stripe("sk_test_YOUR_SECRET_KEY"); // Replace with your actual test secret key
+import Billing from '../models/Billing.js';
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// Now stripe is safe to use below
 export const createCheckoutSession = async (req, res) => {
   try {
-    const { items } = req.body;
+    const { name, contact, pin, address, city, district, state } = req.body;
+
+    const billingData = new Billing({ name, contact, pin, address, city, district, state });
+    await billingData.save();
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: items.map(item => ({
-        price_data: {
-          currency: 'inr',
-          product_data: {
-            name: item.name,
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'Farm Product' },
+            unit_amount: 5000,
           },
-          unit_amount: item.price * 100, // price in paisa
+          quantity: 1,
         },
-        quantity: item.quantity,
-      })),
+      ],
       mode: 'payment',
-      success_url: 'http://localhost:5000/success',
-      cancel_url: 'http://localhost:5000/cancel',
+      success_url: 'http://localhost:5173/success',
+      cancel_url: 'http://localhost:5173/cancel',
     });
 
-    res.json({ url: session.url });
+    res.status(200).json({ url: session.url });
   } catch (error) {
-    console.error("Stripe Checkout Error:", error);
-    res.status(500).json({ error: "Something went wrong" });
+    console.error('Stripe error:', error.message);
+    res.status(500).json({ error: 'Stripe session creation failed' });
   }
 };

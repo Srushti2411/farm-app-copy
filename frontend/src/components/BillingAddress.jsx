@@ -1,10 +1,6 @@
-import {
-  Container, Box, Heading, VStack, Input, useColorModeValue, Button
-} from '@chakra-ui/react';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // for routing
 
-const BillingAddress = () => {
+export default function BillingAddress() {
   const [formData, setFormData] = useState({
     name: '',
     contact: '',
@@ -12,51 +8,106 @@ const BillingAddress = () => {
     address: '',
     city: '',
     district: '',
-    state: ''
+    state: '',
   });
 
-  const navigate = useNavigate(); // used for redirecting
-
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleProceed = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/billing', {
+      const res = await fetch('http://localhost:5000/api/billing/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       const data = await res.json();
-      console.log(data.message); // Optional: log response message
+      console.log('Stripe Session URL:', data.url);
 
-      // Navigate to payment page
-      navigate('/payment');
+      if (data.url) {
+        window.location.href = data.url; // ✅ Redirect to Stripe Checkout
+      } else {
+        alert('Payment session not created.');
+      }
     } catch (err) {
       console.error("Error submitting billing:", err);
     }
   };
 
   return (
-    <Container>
-      <Heading mt={5} textAlign={"center"}>Fill your Details</Heading>
-      <Box w={"full"} bg={useColorModeValue("white", "gray.800")}
-        rounded={"lg"} p={6} shadow={"md"} mt={"20"}>
-        <VStack>
-          <Input placeholder='Enter Your name' name="name" onChange={handleChange} value={formData.name} marginBottom={"15px"} />
-          <Input placeholder='Enter Your contact Number' name="contact" onChange={handleChange} value={formData.contact} marginBottom={"15px"} />
-          <Input placeholder='Pin Code' name="pin" onChange={handleChange} value={formData.pin} marginBottom={"15px"} />
-          <Input placeholder='Enter Your full address' name="address" onChange={handleChange} value={formData.address} marginBottom={"15px"} />
-          <Input placeholder='City' name="city" onChange={handleChange} value={formData.city} marginBottom={"15px"} />
-          <Input placeholder='District' name="district" onChange={handleChange} value={formData.district} marginBottom={"15px"} />
-          <Input placeholder='State' name="state" onChange={handleChange} value={formData.state} marginBottom={"15px"} />
-          <Button onClick={handleProceed}>Proceed for Payment</Button>
-        </VStack>
-      </Box>
-    </Container>
-  );
-};
+    <div style={{ padding: "2rem" }}>
+      <h2>Billing & Payment</h2>
 
-export default BillingAddress;
+      <input
+        type="text"
+        name="name"
+        placeholder="Name"
+        value={formData.name}
+        onChange={handleChange}
+        required
+      /><br /><br />
+
+      <input
+        type="text"
+        name="contact"
+        placeholder="Contact"
+        value={formData.contact}
+        onChange={handleChange}
+        required
+      /><br /><br />
+
+      <input
+        type="text"
+        name="pin"
+        placeholder="PIN Code"
+        value={formData.pin}
+        onChange={handleChange}
+        required
+      /><br /><br />
+
+      <input
+        type="text"
+        name="address"
+        placeholder="Address"
+        value={formData.address}
+        onChange={handleChange}
+        required
+      /><br /><br />
+
+      <input
+        type="text"
+        name="city"
+        placeholder="City"
+        value={formData.city}
+        onChange={handleChange}
+        required
+      /><br /><br />
+
+      <input
+        type="text"
+        name="district"
+        placeholder="District"
+        value={formData.district}
+        onChange={handleChange}
+        required
+      /><br /><br />
+
+      <input
+        type="text"
+        name="state"
+        placeholder="State"
+        value={formData.state}
+        onChange={handleChange}
+        required
+      /><br /><br />
+
+      <button onClick={handleProceed}>Proceed to Pay</button>
+    </div>
+  );
+}
