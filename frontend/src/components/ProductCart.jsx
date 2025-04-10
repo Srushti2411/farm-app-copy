@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { EditIcon, DeleteIcon } from "@chakra-ui/icons"
 import { FaCartPlus } from "react-icons/fa";
 import { useProductStore } from '../store/product';
-import { Flex, useToast } from '@chakra-ui/react'
+import { Flex, useToast, Select } from '@chakra-ui/react'
 import { useDisclosure } from "@chakra-ui/react";
 import { useAuthStore } from '../store/authStore';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -30,7 +30,7 @@ const ProductCart = ({ product }) => {
     const textColor = useColorModeValue("gray.600", "gray.200");
     const bg = useColorModeValue("white", "gray.800");
     const { isOpen, onOpen, onClose } = useDisclosure();
-    const { deleteProducts, updateProducts } = useProductStore();
+    const { deleteProducts, updateProducts, fetchProducts } = useProductStore();
      const toast = useToast();
     const navigate = useNavigate();
     //states of this component
@@ -45,6 +45,7 @@ const ProductCart = ({ product }) => {
         const { success, message } = await updateProducts(pid, updatedProduct);
         onClose();
         if (success) {
+            fetchProducts();
             toast({
                 title: "Updated Successfully!",
                 description: message,
@@ -203,6 +204,16 @@ const ProductCart = ({ product }) => {
 
                         <Input placeholder='Enter image URL' name='image' type='text' value={updatedProduct.image}
                             onChange={(e) => setUpdatedProduct({ ...updatedProduct, image: e.target.value })} />
+
+                        <Select 
+                            placeholder='Select product category'
+                            value={updatedProduct.categories}
+                            onChange={(e) => setUpdatedProduct({ ...updatedProduct, categories: e.target.value })}
+                        >
+                            <option value="fruits">Fruits</option>
+                            <option value="grains">Grains</option>
+                            <option value="vegetables">Vegetables</option>
+                        </Select>
                     </VStack>
                 </ModalBody>
                 <ModalFooter>

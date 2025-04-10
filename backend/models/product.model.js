@@ -18,6 +18,11 @@ const productSchema = new mongoose.Schema({
         required: true,
         enum:["kg","pound","liter","dozens","tons"],
         default:"kg"
+    },
+    categories: {
+        type: String,
+        required: true,
+        enum: ["fruits", "grains", "vegetables"]
     }
 },
 {timestamps:true}
