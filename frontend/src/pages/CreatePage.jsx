@@ -1,4 +1,4 @@
-import { Box, Button, Container, Heading, Input, useColorModeValue, VStack } from '@chakra-ui/react';
+import { Box, Button, Container, Heading, Input, Select, useColorModeValue, VStack } from '@chakra-ui/react';
 import React, { useState } from 'react'
 import { useProductStore } from '../store/product';
 import { useToast } from '@chakra-ui/react'
@@ -8,7 +8,8 @@ const CreatePage = () => {
     name: "",
     price: "",
     image: "",
-    unit:""
+    unit:"",
+    categories:""
   });
 const toast= useToast();
   const {createProduct} = useProductStore();
@@ -52,6 +53,16 @@ const toast= useToast();
 
           <Input value={newProduct.image} placeholder='Enter image URL' name='image'
             onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })} />
+
+          <Select 
+            placeholder='Select product category'
+            value={newProduct.categories}
+            onChange={(e) => setNewProduct({ ...newProduct, categories: e.target.value })}
+          >
+            <option value="fruits">Fruits</option>
+            <option value="grains">Grains</option>
+            <option value="vegetables">Vegetables</option>
+          </Select>
           
             <Button colorScheme='blue' onClick={handleAddProduct} w={"full"}>Add Product</Button>
         </VStack>

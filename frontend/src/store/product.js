@@ -6,7 +6,7 @@ export const useProductStore = create((set) => ({
     
     createProduct: async (newProduct) => {
 
-        if (!newProduct.name || !newProduct.price || !newProduct.unit || !newProduct.image) {
+        if (!newProduct.name || !newProduct.price || !newProduct.unit || !newProduct.image || !newProduct.categories) {
             return { success: false, message: "please provide full details of the product!" }
         }
 
