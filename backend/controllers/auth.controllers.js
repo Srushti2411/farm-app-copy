@@ -1,35 +1,42 @@
-
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookies.js";
-
 import { sendVerificationEmail, sendWelcomeEmail, sendOTPEmail, sendResetEmail, sendResetSuccessEmail, sendDeleteEmail } from '../nodemailer/sendEmail.js';
 
-// Signup Api
-
+// Signup API
 export const signup = async (req, res) => {
-    const { name, email, password, accountType } = req.body;
+    const { name, email, password, accountType, isCertified } = req.body;
+    let certificate = req.file;  // Access certificate file from multer
+
+    // Log the received values to check if they are correct
+    console.log('isCertified:', isCertified);
+    console.log('Uploaded certificate:', certificate);  // Log the uploaded file path
+
+    // Ensure all required fields are present (excluding file for certified farmers)
+    if (!name || !email || !password || !accountType) {
+        return res.status(400).json({ success: false, message: "All fields are required!" });
+    }
+
+    // If accountType is 'seller' (farmer) and isCertified is 'true', validate certificate
+    if (accountType === 'seller' && isCertified === 'true' && !certificate) {
+        return res.status(400).json({ success: false, message: "Certificate is required for certified farmers!" });
+    }
 
     try {
-        if (!email || !password || !name || !accountType) {
-            throw new Error("All fields are required!");
-        }
-
         // Check if the user already exists
         const userAlreadyExist = await User.findOne({ email });
-
         if (userAlreadyExist) {
             return res.status(409).json({ success: false, message: "User already exists!" });
         }
 
-        // Hash the password
+        // Hash the password before saving
         const hashPassword = await bcrypt.hash(password, 10);
 
-        //verification token
+        // Generate a verification token
         const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Create
+        // Create a new user object
         const user = new User({
             email,
             password: hashPassword,
@@ -39,90 +46,105 @@ export const signup = async (req, res) => {
             verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours expiration
         });
 
-        // Save the user to db
+        // Handle certificate upload for certified farmers only
+        if (accountType === 'seller' && isCertified && certificate) {
+            user.certificate = certificate.path;  // Save the certificate path (Multer handles the file)
+        }
+
+        // Save the new user to the database
         await user.save();
 
+        // Send verification email
         await sendVerificationEmail(user.email, verificationToken, user.name);
 
-        // Generate token and set cookie
+        // Generate a token and set it in the cookies
         generateTokenAndSetCookie(res, user._id);
 
-        // Respond with success
+        // Respond with success message
         res.status(201).json({
             success: true,
             message: "User created successfully! Please verify your email.",
-            user: {
-                ...user._doc,
-                password: undefined,
-            },
+            user: { ...user._doc, password: undefined },
         });
+
         console.log("User registered and verification email sent!");
     } catch (error) {
         console.log("Error in registering user:", error);
         res.status(400).json({ success: false, message: "Error in creating user!" });
     }
 };
-//signup route revision
 
-//verifying email through verification code 
+
+
+// Verify Email through verification code
 export const verifyEmail = async (req, res) => {
     const { code } = req.body;
 
     try {
-        // Find the user with the provided verification code and check if the code is still valid
         const user = await User.findOne({
             verificationToken: code,
-            verificationTokenExpiresAt: { $gt: Date.now() }, // Ensure the token is not expired
+            verificationTokenExpiresAt: { $gt: Date.now() },
         });
 
         if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: "Verification code is invalid or expired!",
-            });
+            return res.status(400).json({ success: false, message: "Verification code is invalid or expired!" });
         }
 
-        // Update user properties to mark them as verified
+        // Mark the user as verified
         user.isVerified = true;
-        user.verificationToken = undefined; // Remove verification token
-        user.verificationTokenExpiresAt = undefined; // Remove token expiration date
+        user.verificationToken = undefined;
+        user.verificationTokenExpiresAt = undefined;
         await user.save();
 
-        // Respond with success
         res.status(200).json({
             success: true,
             message: "Email verified successfully!",
-            user: {
-                ...user._doc,
-                password: undefined, // Exclude sensitive data
-            },
+            user: { ...user._doc, password: undefined },
         });
 
         console.log("Email verified successfully!");
         await sendWelcomeEmail(user.email, user.name);
     } catch (error) {
         console.error("Error in email verification:", error);
-        res.status(500).json({
-            success: false,
-            message: "Error in verifying the user!",
-            error: error.message,
-        });
+        res.status(500).json({ success: false, message: "Error in verifying the user!" });
     }
 };
 
-// singin
+// Add Seller Certificate Upload API
+export const uploadCertificate = async (req, res) => {
+    const { userId } = req.body; // Get user ID from the body
+    try {
+        const user = await User.findById(userId);
+
+        if (!user || user.accountType !== 'seller') {
+            return res.status(400).json({ success: false, message: "Invalid seller account!" });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "No certificate file uploaded!" });
+        }
+
+        user.certificate = req.file.path; // Save the file path to the user's certificate field
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Certificate uploaded successfully!" });
+    } catch (error) {
+        console.error("Error in uploading certificate:", error);
+        res.status(500).json({ success: false, message: "Error uploading certificate!" });
+    }
+};
+
+// Signin
 export const signin = async (req, res) => {
     const { email, password } = req.body;
-
     try {
-        const user = await User.findOne({ email })
+        const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ success: false, message: "Invalid credientials!" })
+            return res.status(400).json({ success: false, message: "Invalid credentials!" });
         }
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(400).json({ success: false, message: "Invalid credientials!" })
-
+            return res.status(400).json({ success: false, message: "Invalid credentials!" });
         }
 
         generateTokenAndSetCookie(res, user._id);
@@ -131,18 +153,19 @@ export const signin = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "successfully signed in!",
-            user: {
-                ...user._doc,
-                password: undefined
-            }
-        })
-        console.log("singed in!")
+            message: "Successfully signed in!",
+            user: { ...user._doc, password: undefined },
+        });
+
+        console.log("Signed in!");
     } catch (error) {
-        console.log("error in login!", error)
-        res.status(400).json({ success: false, message: "error in singing you inn!" })
+        console.log("Error in login:", error);
+        res.status(400).json({ success: false, message: "Error in signing you in!" });
     }
-}
+};
+
+// Other methods (logout, forgotPassword, resetPassword) remain unchanged...
+
 
 //logout
 export const logout = async (req, res) => {

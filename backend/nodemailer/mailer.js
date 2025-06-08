@@ -31,7 +31,7 @@ export const sendMail = async (to, subject, text, html) => {
         }
 
         const mailOptions = {
-            from: `"FarmFlo" <${process.env.EMAIL_USER}>`,
+            from: `"AgroConnect" <${process.env.EMAIL_USER}>`,
             to,
             subject,
             text,

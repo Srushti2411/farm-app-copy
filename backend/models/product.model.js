@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import Farmer from './Farmer.js';
+
 
 const productSchema = new mongoose.Schema({
     name:{
@@ -23,7 +25,11 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ["fruits", "grains", "vegetables"]
-    }
+    },
+    farmer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Farmer', // This references the Farmer model
+      }
 },
 {timestamps:true}
 

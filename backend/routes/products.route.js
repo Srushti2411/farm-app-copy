@@ -1,9 +1,9 @@
 import express from "express"
-import { createProduct, deleteProduct, getProduct,  updateProduct } from "../controllers/product.controller.js";
+import { createProduct, deleteProduct, getProducts, updateProduct } from "../controllers/product.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 const router = express.Router();
 
-router.get("/",verifyToken,getProduct)
+router.get("/",verifyToken,getProducts)
 
 router.post("/",verifyToken,createProduct)
 
